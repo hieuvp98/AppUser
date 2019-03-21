@@ -10,7 +10,7 @@ import javax.annotation.security.RolesAllowed
 @RestController
 @RequestMapping("/api/v1/admin/app")
 @RolesAllowed("ROLE_ADMIN")
-class AppController(val appServiceImpl: AppServiceImpl) {
+class AdminAppController(val appServiceImpl: AppServiceImpl) {
 
     @PostMapping
     fun createApp(@RequestBody app: App): ResponseEntity<String> {

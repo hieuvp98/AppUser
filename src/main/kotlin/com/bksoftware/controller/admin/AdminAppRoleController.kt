@@ -12,7 +12,7 @@ import javax.annotation.security.RolesAllowed
 @RequestMapping("/api/v1/admin/app-role")
 @RolesAllowed("ROLE_ADMIN")
 @Secured("ROLE_ADMIN")
-class AppRoleController(val appRoleService: AppRoleServiceImpl) {
+class AdminAppRoleController(val appRoleService: AppRoleServiceImpl) {
 
     @PostMapping
     fun createAppRole(@RequestBody appRole:AppRole):ResponseEntity<String>{
@@ -29,7 +29,7 @@ class AppRoleController(val appRoleService: AppRoleServiceImpl) {
         else ResponseEntity("update fail", HttpStatus.BAD_REQUEST)
     }
 
-    @GetMapping
+    @GetMapping("/all")
     fun findAllRole() = ResponseEntity(appRoleService.findAll(),HttpStatus.OK)
 
 }

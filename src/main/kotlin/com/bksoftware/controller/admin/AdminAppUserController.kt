@@ -13,8 +13,8 @@ import javax.annotation.security.RolesAllowed
 @RestController
 @RolesAllowed("ROLE_ADMIN")
 @RequestMapping("/api/v1/admin/app-user")
-class AppUserController(val appUserService: AppUserServiceImpl,
-                        val appService: AppServiceImpl) {
+class AdminAppUserController(val appUserService: AppUserServiceImpl,
+                             val appService: AppServiceImpl) {
 
 
     @PutMapping("/set-roles")

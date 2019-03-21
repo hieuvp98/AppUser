@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -55,7 +56,7 @@ public class AppUser {
 
     public Set<GrantedAuthority> getGrantedAuthority(){
         Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
-        this.appRoles.forEach( appRole -> grantedAuthorities.add(appRole::getRole));
+        this.appRoles.forEach( appRole -> grantedAuthorities.add(new SimpleGrantedAuthority(appRole.getRole())));
         return grantedAuthorities;
     }
 
