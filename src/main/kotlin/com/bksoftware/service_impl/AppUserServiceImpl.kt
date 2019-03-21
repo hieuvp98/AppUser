@@ -109,7 +109,7 @@ class AppUserServiceImpl(val appUserRepository: AppUserRepository,
     override fun build(registerForm: RegisterForm): AppUser {
         val appUser = AppUser()
         appUser.username = registerForm.username
-//        appUser.password = bCryptPasswordEncoder.encode(registerForm.password)
+        appUser.password = registerForm.password
         appUser.email = registerForm.email
         appUser.phoneNumber = registerForm.phoneNumber.toInt()
         appUser.fullName = registerForm.fullName

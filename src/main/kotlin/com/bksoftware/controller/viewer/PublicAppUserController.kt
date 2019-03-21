@@ -8,10 +8,7 @@ import com.bksoftware.service_impl.*
 import com.bksoftware.validator.RegisterRegex
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -46,17 +43,17 @@ class PublicAppUserController(val appService: AppServiceImpl,
         appUser.app = app
         if (!appUserService.saveAppUser(appUser))
             return ResponseEntity("create fail", HttpStatus.BAD_REQUEST)
-        val user:AppUser? = appUserService.findAppUserByUsername(appUser.username)
-        if(!userVerifyService.createVerify(user!!))
-            return ResponseEntity("create verify error",HttpStatus.BAD_REQUEST)
+        val user: AppUser? = appUserService.findAppUserByUsername(appUser.username)
+        if (!userVerifyService.createVerify(user!!))
+            return ResponseEntity("create verify error", HttpStatus.BAD_REQUEST)
         val userVerify = userVerifyService.findUserVerifyByAppUser(user)
-        val expiredTime= userVerify!!.expiredTime
+        val expiredTime = userVerify!!.expiredTime
         val time = "${expiredTime.hour}:${expiredTime.minute}:${expiredTime.second} ${expiredTime.dayOfMonth}-${expiredTime.month}-${expiredTime.year}"
-        if(!sendMailService.sendMail(registerForm.email,
-                "Verify your account",
-                "Your verify code is ${userVerify.verifyCode}. Code will be expired at $time."))
-            return ResponseEntity("send mail error",HttpStatus.INTERNAL_SERVER_ERROR)
-        return ResponseEntity("register success",HttpStatus.OK)
+        if (!sendMailService.sendMail(registerForm.email,
+                        "Verify your account",
+                        "Your verify code is ${userVerify.verifyCode}. Code will be expired at $time."))
+            return ResponseEntity("send mail error", HttpStatus.INTERNAL_SERVER_ERROR)
+        return ResponseEntity("register success", HttpStatus.OK)
     }
 
     @PostMapping("/login")
@@ -69,9 +66,27 @@ class PublicAppUserController(val appService: AppServiceImpl,
         if (!appUserService.checkLogin(loginForm, app))
             return ResponseEntity("username or password is not correct", HttpStatus.UNAUTHORIZED)
         val appUser = appUserService.findAppUserByUsername(loginForm.username)
-        if (!appUser!!.isVerified) return ResponseEntity("user was not verified",HttpStatus.FORBIDDEN)
+        if (!appUser!!.isVerified) return ResponseEntity("user was not verified", HttpStatus.FORBIDDEN)
         httpServletResponse.setHeader("token", jwtService.createToken(loginForm.username))
         return ResponseEntity("Login success", HttpStatus.OK)
+    }
+
+    @PostMapping("/verify/{id}")
+    fun verify(@PathVariable("id") id: String, @RequestParam("code") code: String): ResponseEntity<String> {
+        val appUser = appUserService.findById(id) ?: return ResponseEntity("can not find user", HttpStatus.BAD_REQUEST)
+        return when (userVerifyService.checkVerify(appUser, code)) {
+            -3 -> ResponseEntity("can not find verify", HttpStatus.BAD_REQUEST)
+            -2 -> ResponseEntity("code is not correct", HttpStatus.BAD_REQUEST)
+            -1 -> ResponseEntity("code was expired", HttpStatus.BAD_REQUEST)
+            1 -> {
+                appUser.isVerified = true
+                if (!appUserService.saveAppUser(appUser)){
+                    return ResponseEntity("error",HttpStatus.BAD_REQUEST)
+                }
+                ResponseEntity("verified", HttpStatus.OK)
+            }
+            else -> ResponseEntity("error", HttpStatus.BAD_REQUEST)
+        }
     }
 
 }
