@@ -19,6 +19,10 @@ interface AppUserRepository : MongoRepository<AppUser, ObjectId> {
 
     fun findAppUserByUsernameAndApp(username: String,app: App):AppUser
 
+    fun findAppUserByEmailAndApp(email:String,app:App) :AppUser
+
+    fun findAppUserByPhoneNumberAndApp(phoneNumber:Int,app: App): AppUser
+
     fun findAllByApp(app : App):List<AppUser>
 
     fun findAllByApp(app: App, pageable: Pageable):Page<AppUser>

@@ -1,4 +1,4 @@
-package com.bksoftware.controller.admin
+package com.bksoftware.rest_controller.admin
 
 import com.bksoftware.entities.AppRole
 import com.bksoftware.service_impl.AppRoleServiceImpl

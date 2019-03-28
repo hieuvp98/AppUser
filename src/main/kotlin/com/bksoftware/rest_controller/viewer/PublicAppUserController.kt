@@ -1,4 +1,4 @@
-package com.bksoftware.controller.viewer
+package com.bksoftware.rest_controller.viewer
 
 import com.bksoftware.entities.AppUser
 import com.bksoftware.entities.form.LoginForm
@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse
 
 
 @RestController
-@RequestMapping("/api/v1/public/app-user")
+@RequestMapping("/api/v1/public/user")
 class PublicAppUserController(val appService: AppServiceImpl,
                               val appUserService: AppUserServiceImpl,
                               val jwtService: JWTService,
@@ -63,11 +63,15 @@ class PublicAppUserController(val appService: AppServiceImpl,
         val app = appService.findAppByAppName(header)
                 ?: return ResponseEntity("can not find App", HttpStatus.BAD_REQUEST)
         loginForm.username += " ${app.id}"
-        if (!appUserService.checkLogin(loginForm, app))
-            return ResponseEntity("username or password is not correct", HttpStatus.UNAUTHORIZED)
-        val appUser = appUserService.findAppUserByUsername(loginForm.username)
-        if (!appUser!!.isVerified) return ResponseEntity("user was not verified", HttpStatus.FORBIDDEN)
-        httpServletResponse.setHeader("token", jwtService.createToken(loginForm.username))
+        var appUser = AppUser()
+         when (appUserService.checkLogin(loginForm, app)){
+            0 -> return ResponseEntity("username or password is not correct", HttpStatus.UNAUTHORIZED)
+             1 -> appUser = appUserService.findAppUserByUsername(loginForm.username)!!
+             2 -> appUser = appUserService.findAppUserByEmailAndApp(loginForm.username,app)!!
+             3 -> appUser = appUserService.findAppUserByPhoneNumberAndApp(loginForm.username,app)!!
+        }
+        if (!appUser.isVerified) return ResponseEntity("user was not verified", HttpStatus.FORBIDDEN)
+        httpServletResponse.setHeader("token", jwtService.createToken(appUser.username))
         return ResponseEntity("Login success", HttpStatus.OK)
     }
 
@@ -80,13 +84,29 @@ class PublicAppUserController(val appService: AppServiceImpl,
             -1 -> ResponseEntity("code was expired", HttpStatus.BAD_REQUEST)
             1 -> {
                 appUser.isVerified = true
-                if (!appUserService.saveAppUser(appUser)){
-                    return ResponseEntity("error",HttpStatus.BAD_REQUEST)
+                if (!appUserService.saveAppUser(appUser)) {
+                    return ResponseEntity("error", HttpStatus.BAD_REQUEST)
                 }
                 ResponseEntity("verified", HttpStatus.OK)
             }
             else -> ResponseEntity("error", HttpStatus.BAD_REQUEST)
         }
+    }
+
+    @PostMapping("/forget-password")
+    fun forgetPassword(@RequestParam("email") email: String, httpServletRequest: HttpServletRequest): ResponseEntity<String> {
+        val header = httpServletRequest.getHeader("AppName")
+                ?: return ResponseEntity("AppName is null", HttpStatus.BAD_REQUEST)
+        val app = appService.findAppByAppName(header)
+                ?: return ResponseEntity("can not find App", HttpStatus.BAD_REQUEST)
+        val users = appUserService.findAppUserByApp(app)
+        val user = users.find { u -> u.email == email }
+                ?: return ResponseEntity("cannot find user", HttpStatus.BAD_REQUEST)
+        if (!sendMailService.sendMail(user.email,
+                        "Your password",
+                        "Your password is ${user.password}."))
+            return ResponseEntity("send mail error", HttpStatus.INTERNAL_SERVER_ERROR)
+        return ResponseEntity("Your password was sent to your email", HttpStatus.OK)
     }
 
 }

@@ -20,14 +20,20 @@ interface AppUserService {
 
     fun findAppUserByUserNameAndApp(userName: String,app: App): AppUser?
 
+    fun findAppUserByEmailAndApp(email:String,app: App) : AppUser?
+
+    fun findAppUserByPhoneNumberAndApp(phoneNumber:String,app: App) : AppUser?
+
     fun findAppUserByApp(app: App):List<AppUser>
 
     fun findAppUserByApp(app: App,pageable: Pageable):List<AppUser>
 
     fun checkRegister(appUser: RegisterForm,app: App):Int
 
-    fun checkLogin(loginForm: LoginForm, app: App):Boolean
+    fun checkLogin(loginForm: LoginForm, app: App):Int
 
     fun build(registerForm: RegisterForm):AppUser
+
+    fun changeInfo(appUser: AppUser, appUser1: AppUser):Int
 
 }

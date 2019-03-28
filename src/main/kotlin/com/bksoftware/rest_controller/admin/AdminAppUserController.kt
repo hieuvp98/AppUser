@@ -1,4 +1,4 @@
-package com.bksoftware.controller.admin
+package com.bksoftware.rest_controller.admin
 
 import com.bksoftware.entities.AppRole
 import com.bksoftware.entities.AppUser
@@ -12,7 +12,7 @@ import javax.annotation.security.RolesAllowed
 
 @RestController
 @RolesAllowed("ROLE_ADMIN")
-@RequestMapping("/api/v1/admin/app-user")
+@RequestMapping("/api/v1/admin/user")
 class AdminAppUserController(val appUserService: AppUserServiceImpl,
                              val appService: AppServiceImpl) {
 
@@ -27,9 +27,15 @@ class AdminAppUserController(val appUserService: AppUserServiceImpl,
             ResponseEntity("update fail", HttpStatus.BAD_REQUEST)
     }
 
-    @GetMapping
+    @GetMapping("/app/{idApp}")
     fun findAllAppUserByApp(@PathVariable idApp: String): ResponseEntity<List<AppUser>> {
         val app = appService.findAppById(idApp) ?: return ResponseEntity(emptyList(), HttpStatus.BAD_REQUEST)
         return ResponseEntity(appUserService.findAppUserByApp(app), HttpStatus.OK)
+    }
+
+    @GetMapping("/{id}")
+    fun findAppUserById(@PathVariable("id") id : String):ResponseEntity<AppUser>{
+        val user = appUserService.findById(id) ?: return ResponseEntity(AppUser(),HttpStatus.BAD_REQUEST)
+        return ResponseEntity(user,HttpStatus.OK)
     }
 }
